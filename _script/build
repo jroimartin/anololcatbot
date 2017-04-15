@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e
+
+mkdir -p _build
+GOOS=linux GOARCH=amd64 go build -o _build/anololcatbot ./cmd/anololcatbot
+
+docker build -t anololcatbot .

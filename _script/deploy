@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [[ -z "$ANOLOLCATBOT_TOKEN" ]]; then
+	echo 'env var ANOLOLCATBOT_TOKEN is not set' >&2
+	exit 1
+fi
+
+docker kill anololcatbot
+docker rm -f anololcatbot
+docker run -d --name anololcatbot -e ANOLOLCATBOT_TOKEN=$ANOLOLCATBOT_TOKEN anololcatbot
