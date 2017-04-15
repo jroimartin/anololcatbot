@@ -23,15 +23,6 @@ const (
 	picsLimit = 25
 )
 
-type picsResponse struct {
-	Pics []struct {
-		ID     string `json:"id"`
-		UID    string `json:"uid"`
-		Width  int    `json:"sizew"`
-		Height int    `json:"sizeh"`
-	}
-}
-
 func main() {
 	parallel := flag.Int("parallel", 10, "maximum number of parallel goroutines")
 	debug := flag.Bool("debug", false, "enable debug output")
@@ -52,7 +43,7 @@ func main() {
 
 	log.Printf("authorized on account %s", bot.Self.UserName)
 
-	// Get only the last update to avoid Ano DoS
+	// Get only the last remaining update
 	u := tgbotapi.NewUpdate(-1)
 	u.Timeout = 60
 
@@ -80,28 +71,32 @@ func handleUpdate(parchan <-chan struct{}, bot *tgbotapi.BotAPI, update tgbotapi
 	q := strings.TrimSpace(update.InlineQuery.Query)
 	id := update.InlineQuery.ID
 	offset := update.InlineQuery.Offset
-	results := []interface{}{}
 	nextOffset := ""
 
-	var err error
+	var (
+		err     error
+		results []interface{}
+	)
+
 	if q != "" {
-		off := 0
+		offsetInt := 0
+
 		if offset != "" {
-			off, err = strconv.Atoi(offset)
+			offsetInt, err = strconv.Atoi(offset)
 			if err != nil {
 				log.Printf("cannot parse offset: %q", offset)
 				return
 			}
 		}
 
-		results, err = searchRelated(q, off)
+		results, err = searchRelated(q, offsetInt)
 		if err != nil {
 			log.Printf("cannot get results: %v", err)
 			return
 		}
 
 		if len(results) == picsLimit {
-			nextOffset = strconv.Itoa(off + picsLimit)
+			nextOffset = strconv.Itoa(offsetInt + picsLimit)
 		}
 	} else {
 		results, err = randomPics()
@@ -136,7 +131,7 @@ func searchRelated(query string, offset int) (results []interface{}, err error) 
 		picsLimit,
 	}
 
-	return doRequest(searchURL, reqData)
+	return getResults(searchURL, reqData)
 }
 
 func randomPics() (results []interface{}, err error) {
@@ -148,11 +143,18 @@ func randomPics() (results []interface{}, err error) {
 		picsLimit,
 	}
 
-	return doRequest(randomURL, reqData)
+	return getResults(randomURL, reqData)
 }
 
-func doRequest(url string, reqData interface{}) (results []interface{}, err error) {
-	respData := picsResponse{}
+func getResults(url string, reqData interface{}) (results []interface{}, err error) {
+	respData := struct {
+		Pics []struct {
+			ID     string `json:"id"`
+			UID    string `json:"uid"`
+			Width  int    `json:"sizew"`
+			Height int    `json:"sizeh"`
+		}
+	}{}
 
 	reqBody, err := json.Marshal(reqData)
 	if err != nil {
