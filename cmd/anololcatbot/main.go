@@ -43,8 +43,9 @@ func main() {
 
 	log.Printf("authorized on account %s", bot.Self.UserName)
 
-	// Get only the last remaining update
-	u := tgbotapi.NewUpdate(0)
+	// Get only the last remaining update.
+	// Reference: https://core.telegram.org/bots/api#getupdates
+	u := tgbotapi.NewUpdate(-1)
 	u.Timeout = 60
 
 	updates, err := bot.GetUpdatesChan(u)
