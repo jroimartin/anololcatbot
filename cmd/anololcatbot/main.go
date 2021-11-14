@@ -36,7 +36,7 @@ func main() {
 
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("could not create bot API: %v", err)
 	}
 
 	bot.Debug = *debug
@@ -44,10 +44,13 @@ func main() {
 	log.Printf("authorized on account %s", bot.Self.UserName)
 
 	// Get only the last remaining update
-	u := tgbotapi.NewUpdate(-1)
+	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
 	updates, err := bot.GetUpdatesChan(u)
+	if err != nil {
+		log.Fatalf("could not get updates channel: %v", err)
+	}
 
 	parchan := make(chan struct{}, *parallel)
 
