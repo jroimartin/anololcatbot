@@ -1,10 +1,18 @@
 #!/bin/bash
 
-if [[ -z "$ANOLOLCATBOT_TOKEN" ]]; then
-	echo 'ANOLOLCATBOT_TOKEN is not set' >&2
+set -e -u
+
+# Set working directory to the root of the repo, so the script can be run from
+# any location.
+cd "$(dirname $0)/.."
+
+if [[ $# -ne 2 ]]; then
+	echo "usage: $0 context token" >&2
 	exit 1
 fi
+context=$1
+token=$2
 
-docker kill anololcatbot
-docker rm -f anololcatbot
-docker run -d --name anololcatbot -e ANOLOLCATBOT_TOKEN=$ANOLOLCATBOT_TOKEN anololcatbot
+docker --context "${context}" rm -f anololcatbot
+docker --context "${context}" run -d --restart always --name anololcatbot \
+	-e "ANOLOLCATBOT_TOKEN=${token}" anololcatbot

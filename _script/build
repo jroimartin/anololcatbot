@@ -1,3 +1,15 @@
 #!/bin/bash
 
-docker build -t anololcatbot .
+set -e -u
+
+# Set working directory to the root of the repo, so the script can be run from
+# any location.
+cd "$(dirname $0)/.."
+
+if [[ $# -ne 1 ]]; then
+	echo "usage: $0 context" >&2
+	exit 1
+fi
+context=$1
+
+docker --context "${context}" build -t anololcatbot .
