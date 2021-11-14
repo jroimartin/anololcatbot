@@ -1,18 +1,18 @@
-FROM golang:1.14-alpine as build
-
-RUN apk --update add git
+FROM golang:1.17-alpine3.14 as build
 
 WORKDIR /go/src/github.com/jroimartin/anololcatbot
 COPY . .
-RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go get -v ./cmd/anololcatbot
+
+RUN go build ./cmd/anololcatbot
 
 
-FROM alpine:latest
+FROM alpine:3.14
 
 RUN apk --update add ca-certificates
 
-WORKDIR /opt/anololcatbot/
-COPY --from=build /go/bin/anololcatbot anololcatbot
-RUN chmod 755 anololcatbot
+COPY --from=build \
+	/go/src/github.com/jroimartin/anololcatbot/anololcatbot \
+	/usr/local/bin/anololcatbot
+RUN chmod 755 /usr/local/bin/anololcatbot
 
-ENTRYPOINT ["/opt/anololcatbot/anololcatbot"]
+ENTRYPOINT ["/usr/local/bin/anololcatbot"]
